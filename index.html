@@ -9,28 +9,10 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Geneva">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Tahoma">
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="./styles/game-config-popup.css">
     <style>
         body {
-            margin: 0;
-            padding: 0;
-            font-family: Oxanium, Verdana, Geneva, Tahoma, sans-serif;
-        }
-
-        a {
-            color: #FFE900;
-        }
-
-        button {
-            border: 0;
-            font-family: inherit;
-        }
-
-        #root {
-            background-color: #0f101c;
-            min-height: 100vh;
-            padding: 8px;
-            box-sizing: border-box;
+            width: 99%;
+            height: 100%;
         }
 
         .interactable-center-container {
@@ -47,15 +29,6 @@
         .logo {
             margin: auto;
             width: 100%;
-        }
-
-        .button {
-            background-color: black;
-            color: white;
-            font-family: Oxanium, Verdana, Geneva, Tahoma, sans-serif;
-            font-size: 1.5em;
-            font-weight: 700;
-            padding: 0.5rem 1rem;
         }
 
         .title {
@@ -83,7 +56,6 @@
         .stratagem-icon {
             display: block;
             margin: auto;
-            width: 3.2em;
         }
 
         #stratagem-icon-0 {
@@ -111,12 +83,8 @@
             margin: auto;
         }
 
-        .arrow-complete-filter {
-            filter: brightness(1) saturate(5);
-        }
-
         .arrow-incomplete-filter {
-            filter: grayscale(1) brightness(.8);
+            filter: brightness(0.25);
         }
 
         .time-remaining-container {
@@ -146,8 +114,16 @@
             display: block;
             margin: auto;
         }
+
+        .background {
+            background-color: black;
+        }
+
         .info {
             color: gray;
+            position: absolute;
+            bottom: 10px;
+            width: 99%;
             text-align: center;
             font-family: Oxanium, Verdana, Geneva, Tahoma, sans-serif;
             z-index: -1;
@@ -158,50 +134,58 @@
         }
 
         .game-over-popup {
-            background: linear-gradient(145deg, rgba(92, 84, 0, 1) 0%, rgba(15, 16, 28, 1) 40%, rgba(15, 16, 28, 1) 61%, rgba(92, 84, 0, 1) 100%);
+            margin: auto;
+            width: 40%;
+            border-top-left-radius: 5%;
+            border-bottom-right-radius: 5%;
+            background-color: #5c5400;
             z-index: 10;
-            padding-block: 20px;
-            padding-inline: 10px;
-            max-width: 450px;
-            margin-inline: auto;
-            margin-top: 20px;
-            border-radius: 40px 0 40px 0;
-            box-shadow: 9px 9px 23px 4px rgba(0,0,0,0.75);;
+            padding-bottom: 20px;
         }
 
         #completed-strategems-readout {
             color: #FFE900;
             font-family: Oxanium, Verdana, Geneva, Tahoma, sans-serif;
             text-align: left;
-            width: max-content;
-            max-width: 100%;
-            margin-inline: auto;
         }
 
-        #share-button,
-        #share-button-spamless,
-        #refresh-button {
+        #share-button {
             background-color: #ad9f00;
+            border: 1px white;
             color: #FFE900;
+            font-family: Oxanium, Verdana, Geneva, Tahoma, sans-serif;
+            font-size: 2em;
+            padding: 15px 32px;
             text-align: center;
             text-decoration: none;
             display: block;
             margin: auto;
         }
 
-        #share-button {
-            font-size: 2em;
-            padding: 15px 32px;
-        }
-
         #share-button-spamless {
+            background-color: #ad9f00;
+            border: 1px white;
+            color: #FFE900;
+            font-family: Oxanium, Verdana, Geneva, Tahoma, sans-serif;
             font-size: 1em;
             padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+            margin: auto;
         }
 
         #refresh-button {
+            background-color: #ad9f00;
+            border: 1px white;
+            color: #FFE900;
+            font-family: Oxanium, Verdana, Geneva, Tahoma, sans-serif;
             font-size: 1.7em;
             padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+            margin: auto;
         }
 
         @keyframes shake {
@@ -221,140 +205,94 @@
     </style>
 </head>
 
-<body>
-    <div id="root">
-        <div class="logo-container">
-            <img class="logo" src="./data/Images/Helldivers_2_logo.webp">
+<body class="background">
+    <div class="logo-container">
+        <img class="logo" src="./Images/Helldivers_2_logo.webp">
+    </div>
+
+    <h1 class="title">
+        STRATAGEM HERO ONLINE
+    </h1>
+
+    <div class="interactable-center-container" id="interactable-center-container">
+        <h2 class="stratagem-name" id="stratagem-name">
+            HI :) You shouldn't see this
+        </h2>
+
+        <table class="stratagems-table" id="stratagems-table">
+            <tr>
+                <td><img class="stratagem-icon" id="stratagem-icon-0" src="Images/stratagem Icons/Strat Resupply mk1.png"></td>
+                <td><img class="stratagem-icon" id="stratagem-icon-1" src="Images/stratagem Icons/Strat Resupply mk1.png"></td>
+                <td><img class="stratagem-icon" id="stratagem-icon-2" src="Images/stratagem Icons/Strat Resupply mk1.png"></td>
+                <td><img class="stratagem-icon" id="stratagem-icon-3" src="Images/stratagem Icons/Strat Resupply mk1.png"></td>
+            </tr>
+        </table>
+
+        <table class="arrows-table" id="arrows-container">
+            <tr>
+                <td><img class="arrow-image" src="Images/Arrows/Arrow_4_U.png"></td>
+                <td><img class="arrow-image" src="Images/Arrows/Arrow_1_D.png"></td>
+                <td><img class="arrow-image" src="Images/Arrows/Arrow_2_L.png"></td>
+                <td><img class="arrow-image" src="Images/Arrows/Arrow_3_R.png"></td>
+            </tr>
+        </table>
+
+        <div class="time-remaining-container">
+            <div id="time-remaining-bar"></div>
         </div>
 
-        <h1 class="title">
-            STRATAGEM HERO ONLINE
-        </h1>
-
-        <div class="interactable-center-container" id="interactable-center-container">
-            <h2 class="stratagem-name" id="stratagem-name">
-                HI :) You shouldn't see this
-            </h2>
-
-            <table class="stratagems-table" id="stratagems-table">
+        <div id="mobile-button-container" hidden="hidden">
+            <button onclick="keypress('ArrowUp')" class="mobile-button">🡅</button>
+            <table class="arrows-table">
                 <tr>
-                    <td><img class="stratagem-icon" id="stratagem-icon-0" src="data/Images/stratagem Icons/Strat Resupply mk1.png"></td>
-                    <td><img class="stratagem-icon" id="stratagem-icon-1" src="data/Images/stratagem Icons/Strat Resupply mk1.png"></td>
-                    <td><img class="stratagem-icon" id="stratagem-icon-2" src="data/Images/stratagem Icons/Strat Resupply mk1.png"></td>
-                    <td><img class="stratagem-icon" id="stratagem-icon-3" src="data/Images/stratagem Icons/Strat Resupply mk1.png"></td>
+                    <td><button onclick="keypress('ArrowLeft')" class="mobile-button">🡄</button></td>
+                    <td><button onclick="keypress('ArrowDown')" class="mobile-button">🡇</button></td>
+                    <td><button onclick="keypress('ArrowRight')" class="mobile-button">🡆</button></td>
                 </tr>
             </table>
+        </div>  
+    </div>
 
-            <table class="arrows-table" id="arrows-container">
-                <tr>
-                    <td><img class="arrow-image" src="data/Images/Arrows/Arrow_4_U.png"></td>
-                    <td><img class="arrow-image" src="data/Images/Arrows/Arrow_1_D.png"></td>
-                    <td><img class="arrow-image" src="data/Images/Arrows/Arrow_2_L.png"></td>
-                    <td><img class="arrow-image" src="data/Images/Arrows/Arrow_3_R.png"></td>
-                </tr>
-            </table>
-
-            <div class="time-remaining-container">
-                <div id="time-remaining-bar"></div>
-            </div>
-
-            <div id="mobile-button-container" hidden="hidden">
-                <button onclick="keypress('ArrowUp')" class="mobile-button">🡅</button>
-                <table class="arrows-table">
-                    <tr>
-                        <td><button onclick="keypress('ArrowLeft')" class="mobile-button">🡄</button></td>
-                        <td><button onclick="keypress('ArrowDown')" class="mobile-button">🡇</button></td>
-                        <td><button onclick="keypress('ArrowRight')" class="mobile-button">🡆</button></td>
-                    </tr>
-                </table>
-            </div>  
-        </div>
-
-        <div class="game-over-popup" id="game-over-popup" hidden="hidden">
-            <h1 class="title" id="score-readout">SCORE: ##</h1>
-            <p id="completed-strategems-readout"></p>
-            <div>
-                
-                <button onclick="copyShare()" id="share-button">
-                    Share your score!
-                </button>
-
-                <br>
-                
-                <button onclick="copyShare(true)" id="share-button-spamless">
-                    Spam Filter Compatible Share
-                </button>
-
-            </div>
-            <br>
-            <button onclick="window.location.reload()" id="refresh-button">
-                Reinforce! (Play Again)
-                <table class="arrows-table" id="refresh-arrows-container">
-                    <tr>
-                        <td><img class="arrow-image" src="data/Images/Arrows/Arrow_4_U.png"></td>
-                        <td><img class="arrow-image" src="data/Images/Arrows/Arrow_1_D.png"></td>
-                        <td><img class="arrow-image" src="data/Images/Arrows/Arrow_2_L.png"></td>
-                        <td><img class="arrow-image" src="data/Images/Arrows/Arrow_3_R.png"></td>
-                    </tr>
-                </table>
+    <div class="game-over-popup" id="game-over-popup" hidden="hidden">
+        <h1 class="title" id="score-readout">SCORE: ##</h1>
+        <p id="completed-strategems-readout"></p>
+        <div>
+            
+            <button onclick="copyShare()" id="share-button">
+                Share your score!
             </button>
-        </div>
 
-        <div class="game-config-popup-container" id="game-config-popup">
-            <div class="game-config-popup">
-                <p class="game-config-popup__title">Change your keybinds</p>
-                <div class="game-config-popup__key-bindings">
-                    <div class="key-bind-container key-bind-container--up">
-                        <p>
-                            <img class="arrow-image" src="data/Images/Arrows/U - Copy.png">
-                        </p>
-                        <input name="up" type="text">
-                    </div>
-                    <div class="key-bind-container key-bind-container--left">
-                        <p>
-                            <img class="arrow-image" src="data/Images/Arrows/L - Copy.png">
-                        </p>
-                        <input name="left" type="text">
-                    </div>
-                    <div class="key-bind-container key-bind-container--down">
-                        <p>
-                            <img class="arrow-image" src="data/Images/Arrows/D - Copy.png">
-                        </p>
-                        <input name="down" type="text">
-                    </div>
-                    <div class="key-bind-container key-bind-container--right">
-                        <p>
-                            <img class="arrow-image" src="data/Images/Arrows/R - Copy.png">
-                        </p>
-                        <input name="right" type="text">
-                    </div>
-                </div>
-                <div class="game-config-popup__action-buttons">
-                    <button role="button" data-action-type="game-config--save" class="button save-button">save</button>
-                    <button role="button" data-action-type="game-config--close" class="button close-button">close</button>
-                </div>
-            </div>
+            <br>
+            
+            <button onclick="copyShare(true)" id="share-button-spamless">
+                Spam Filter Compatible Share
+            </button>
+
         </div>
-        <div class="info">
-            <div class="info__config-actions-container">
-                <button role="button" data-action-type="game-config--open" class="button">change keybinds</button>
-            </div>
-            <p class="larger-info">
-                Check out Helldivers 2 on <a href="https://store.steampowered.com/app/553850/HELLDIVERS_2/" target="_blank">Steam</a> and <a href="https://www.playstation.com/en-us/games/helldivers-2/" target="_blank">Playstation</a>!<br>
-            </p>
-            Made with 💖 by <a href="https://github.com/CombustibleToast" target="_blank">CombustibleToast</a><br> 
-            Additional contributions by 
-            <a href="https://github.com/CombustibleToast/StratagemHeroOnline/pulls?q=is%3Apr+author%3ASavageCore" target="_blank">SavageCore</a>, 
-            <a href="https://github.com/CombustibleToast/StratagemHeroOnline/pulls?q=is%3Apr+author%3Arrliu" target="_blank">rrliu</a>, 
-            <a href="https://github.com/CombustibleToast/StratagemHeroOnline/pulls?q=is%3Apr+author%3AAlexander-ilyin3" target="_blank">Alexander-ilyin3</a>, 
-            <a href="https://github.com/CombustibleToast/StratagemHeroOnline/pulls?q=is%3Apr+author%3AHAYD323" target="_blank">HAYD323</a>, 
-            and <a href="https://github.com/nvigneux/Helldivers-2-Stratagems-icons-svg" target="_blank">nvigneux</a> for the images. Thank you! <br>
-            Play the original Helldivers 1 version <a href="Old/index.html">here</a>.<br>
-            View the source code <a href="https://github.com/CombustibleToast/StratagemHeroOnline" target="_blank">on Github</a> or report an issue <a href="https://github.com/CombustibleToast/StratagemHeroOnline/issues" target="_blank">here</a><br>
-            Not affiliated with Helldivers, Arrowhead Studios, or Playstation Studios. Please don't sue me :)<br>
-        </div>
+        <br>
+        <button onclick="window.location.reload()" id="refresh-button">
+            Reinforce! (Play Again)
+            <table class="arrows-table" id="refresh-arrows-container">
+                <tr>
+                    <td><img class="arrow-image" src="Images/Arrows/Arrow_4_U.png"></td>
+                    <td><img class="arrow-image" src="Images/Arrows/Arrow_1_D.png"></td>
+                    <td><img class="arrow-image" src="Images/Arrows/Arrow_2_L.png"></td>
+                    <td><img class="arrow-image" src="Images/Arrows/Arrow_3_R.png"></td>
+                </tr>
+            </table>
+        </button>
+    </div>
+
+    <div class="info">
+        <p class="larger-info">
+            Check out Helldivers 2 on <a href="https://store.steampowered.com/app/553850/HELLDIVERS_2/" target="_blank">Steam</a> and <a href="https://www.playstation.com/en-us/games/helldivers-2/" target="_blank">Playstation</a>!<br>
+        </p>
+        Made with 💖 by <a href="https://github.com/CombustibleToast" target="_blank">CombustibleToast</a><br> 
+        View the source code <a href="https://github.com/CombustibleToast/StratagemHeroOnline" target="_blank">on Github</a><br>
+        Report an issue <a href="https://github.com/CombustibleToast/StratagemHeroOnline/issues" target="_blank">here</a><br>
+        Not affiliated with Helldivers, Arrowhead Studios, or Playstation Studios. Please don't sue me :)<br>
     </div>
 </body>
 
-<script type="text/javascript" src="./data/HD2-Sequences.json"></script>
+<script type="text/javascript" src="./data/Stratagem-Sequences.json"></script>
 <script type="text/javascript" src="./script.js"></script>

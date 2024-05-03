@@ -1,30 +1,5 @@
 // Load stratagem data
-var stratagems = undefined;
-
-var xhr = new XMLHttpRequest();
-xhr.open(method='GET', url='./data/HD2-Sequences.json', async=false); // false indicates synchronous request
-xhr.send();
-
-if (xhr.status === 200) {
-    stratagems = xhr.responseText;
-} else {
-    console.error('Error reading file:', xhr.statusText);
-}
-
-stratagems = JSON.parse(stratagems);
-// console.log(stratagems);
-
-// Install keypress listener
-function mainGameKeyDownListener(event) {
-    if (event.isComposing || event.code === 229) {
-        return;
-    }
-    keypress(event.code);
-}
-
-addMainGameListener();
-
-// Set gamepad polling
+let stratagems = JSON.parse(data).list;
 let gpPollInterval;
 const gpPollRate = 1000;
 const gpButtonToKeyMap = {
@@ -33,6 +8,14 @@ const gpButtonToKeyMap = {
     14: "KeyA", // Left
     15: "KeyD"  // Right
 };
+
+// Install keypress listener
+addEventListener("keydown", (event) => {
+    if (event.isComposing || event.code === 229) {
+        return;
+    }
+    keypress(event.code);
+});
 
 // Poll for gamepad connection
 gpPollInterval = setInterval(pollGamepads, gpPollRate);
@@ -46,6 +29,7 @@ function pollGamepads() {
         clearInterval(gpPollInterval);
     }
 }
+
 
 // Gamepad input handling
 let prevButtons = new Array(16).fill(false);
@@ -74,11 +58,11 @@ function gamepadLoop() {
 }
 
 // Load SFX
-var sfxDown = new Audio("./data/Sounds/1_D.mp3");
-var sfxLeft = new Audio("./data/Sounds/2_L.mp3");
-var sfxRight = new Audio("./data/Sounds/3_R.mp3");
-var sfxUp = new Audio("./data/Sounds/4_U.mp3");
-var sfxGameOver = [new Audio("./data/Sounds/GameOver1.mp3"), new Audio("./data/Sounds/GameOver2.mp3")]
+var sfxDown = new Audio("./Images/Sounds/1_D.mp3");
+var sfxLeft = new Audio("./Images/Sounds/2_L.mp3");
+var sfxRight = new Audio("./Images/Sounds/3_R.mp3");
+var sfxUp = new Audio("./Images/Sounds/4_U.mp3");
+var sfxGameOver = [new Audio("./Images/Sounds/GameOver1.mp3"), new Audio("./Images/Sounds/GameOver2.mp3")]
 
 // Create global tracking variables
 var gameState = "initial" //initial, running, hitlag, over
@@ -89,31 +73,24 @@ var refreshArrowSequenceTags;
 const TOTAL_TIME = 10000;
 const COUNTDOWN_STEP = 10;
 const NEW_STRATEGEM_TIMEOUT = 200;
-const CORRECT_TIME_BONUS = 500;
+const CORRECT_TIME_BONUS = 1000;
 const FAILURE_SHAKE_TIME = 200;
 var timeRemaining = TOTAL_TIME;
 var completedStrategemsList = [];
+var completedStrategemsValuesList = [];
+var tempCompStratValueslist = [];
 const CURRENT_STRATAGEM_LIST_LENGTH = 4; //dependent on the html, don't change without modifying html too
 var currentStratagemsList = [];
 var lastCheckedTime = undefined;
-var CONFIGPOPUP = document.getElementById('game-config-popup');
-var TEMPARROWKEYS = {};
+var keyPressScore = 0;
+var timeAtSequenceStart = 0;
+var completionTimeMulti = 0;
+var completionLengthMulti = 0;
+var keyPressScoreToAdd = 0;
+var timeleftf = 0;
+var timelefti = 0;
 
-// initial state of custom config
-const storedArrowKeysConfig = localStorage.getItem("CONFIG.arrowKeys") ? JSON.parse(localStorage.getItem("CONFIG.arrowKeys")) : false;
-const CONFIG = {};
 
-
-if(storedArrowKeysConfig) {
-    CONFIG.arrowKeys = storedArrowKeysConfig;
-} else {
-    CONFIG.arrowKeys = {
-        up:"KeyW",
-        down:"KeyS",
-        left:"KeyA",
-        right:"KeyD"
-    }
-}
 
 // Show directional buttons if user is on mobile
 if(userIsMobile())
@@ -136,23 +113,23 @@ function keypress(keyCode){
     // Ignore invalid keypresses
     let sfx;
     switch(keyCode){
+        case "KeyW":
         case "ArrowUp":
-        case CONFIG.arrowKeys.up:
             sfx = sfxUp;
             keyCode = "KeyW";
             break;
+        case "KeyS":
         case "ArrowDown":
-        case CONFIG.arrowKeys.down:
             sfx = sfxDown;
             keyCode = "KeyS";
             break;
+        case "KeyA":
         case "ArrowLeft":
-        case CONFIG.arrowKeys.left:
             sfx = sfxLeft;
             keyCode = "KeyA";
             break;
+        case "KeyD":
         case "ArrowRight":
-        case CONFIG.arrowKeys.right:
             sfx = sfxRight;
             keyCode = "KeyD";
             break;
@@ -186,12 +163,24 @@ function checkGameKeypress(keyCode, sfx){
         
         //Check if that success completes the entire sequence. 
         if(currentSequenceIndex == currentArrowSequenceTags.length){
-            //Add time bonus and pause the countdown for the delay time
-            timeRemaining += CORRECT_TIME_BONUS;
-            gameState = "hitlag";
+           
+
+            // apply a score multiplier based on time per button press. (more button presses in a sequence yeilds a higher multi) [Broken]
+            completionTimeMulti = Math.floor(20000 / ((timelefti - timeRemaining) / currentStratagemsList[0].sequence.length));
+            completionLengthMulti = Math.ceil(currentStratagemsList[0].sequence.length ** 1.2);
+            keyPressScoreToAdd = 2 * completionLengthMulti  * completionTimeMulti;
+            keyPressScore += keyPressScoreToAdd
+
+             //Add time bonus and pause the countdown for the delay time
+             timeRemaining += CORRECT_TIME_BONUS;
+             gameState = "hitlag";
+ 
 
             //Add completed stratagem to completed list and remove from active list
-            completedStrategemsList.push(currentStratagemsList.shift());
+            
+            completedStrategemsList.push([currentStratagemsList.shift(), `Time Multi: ${completionTimeMulti}x - Length Multi: ${completionLengthMulti}x - Score Added: +${keyPressScoreToAdd}`]);
+            
+        
 
             //Add a new stratagem to the active list
             currentStratagemsList.push(pickRandomStratagem());
@@ -261,12 +250,7 @@ function shakeArrows(time){
 function refreshStratagemDisplay(){
     for(let i in currentStratagemsList){
         // Show the stratagem's picture in the correct slot
-        if (currentStratagemsList[i].image) {
-            document.getElementById(`stratagem-icon-${i}`).src = `./data/Images/Stratagem\ Icons/hd2/${currentStratagemsList[i].image}`;
-        }
-        else {
-            document.getElementById(`stratagem-icon-${i}`).src = `./data/Images/Stratagem\ Icons/hd2/placeholder.png`;
-        }
+        document.getElementById(`stratagem-icon-${i}`).src = `./Images/Stratagem\ Icons/${currentStratagemsList[i].image}`;
     }
 
     // Show arrow icons for the current active stratagem
@@ -274,6 +258,9 @@ function refreshStratagemDisplay(){
 
     // Show active stratagem name
     document.getElementById("stratagem-name").innerHTML = currentStratagemsList[0].name;
+
+    // Get the current time remaining for score multiplier [Broken?]
+    timelefti =  timeRemaining
 }
 
 function pickRandomStratagem(){
@@ -293,21 +280,21 @@ function showArrowSequence(arrowSequence, arrowsContainer){
         let td = document.createElement("td");
         let img = document.createElement("img");
         td.appendChild(img);
-        img.setAttribute("src", `./data/Images/Arrows/${arrow}.png`);
+        img.setAttribute("src", `./Images/Arrows/${arrow}`);
         img.setAttribute("class", `arrow-incomplete-filter`);
 
         // Map filename to keycode
         switch(arrow){
-            case "U":
+            case "Arrow_4_U.png":
                 img.code = "KeyW";
             break;
-            case "D":
+            case "Arrow_1_D.png":
                 img.code = "KeyS";
             break;
-            case "L":
+            case "Arrow_2_L.png":
                 img.code = "KeyA";
             break;
-            case "R":
+            case "Arrow_3_R.png":
                 img.code = "KeyD";
             break;
         }
@@ -321,16 +308,29 @@ function gameOver(){
     //Stop the game
     gameState = "over";
 
+    // Retrieve highscore from localStorage if available
+    var highscore = localStorage.getItem('highscore');
+
+    // Compare current score with highscore and update if necessary
+if (keyPressScore > highscore) {
+    highscore = keyPressScore;
+    // Update highscore in localStorage
+    localStorage.setItem('highscore', highscore);
+}
+
+    let formattedScore = keyPressScore.toLocaleString();
+    let formattedHighScore = highscore.toLocaleString();
+
     // Write score to readout
     let scoreReadout = document.getElementById("score-readout");
-    scoreReadout.innerHTML = `SCORE: ${completedStrategemsList.length}`
+    scoreReadout.innerHTML = `SCORE: ${formattedScore} <br> Highscore: ${formattedHighScore}`;
 
     // Write completed strategems to readout
     let stratagemReadout = document.getElementById("completed-strategems-readout");
     stratagemReadout.innerHTML = stratagemListToString(true);
 
     // Show refresh arrow sequence
-    let sequence = ["U", "D", "R", "L", "U"];
+    let sequence = ["Arrow_4_U.png", "Arrow_1_D.png", "Arrow_3_R.png", "Arrow_2_L.png", "Arrow_4_U.png"];
     let container = document.getElementById("refresh-arrows-container");
     refreshArrowSequenceTags = showArrowSequence(sequence, container);
 
@@ -348,48 +348,77 @@ function gameOver(){
     sfxGameOver[Math.floor(Math.random() * sfxGameOver.length)].play();
 }
 
-function stratagemListToString(html, spamless){
-    // Set direction characters based on argument
+function stratagemListToString(html, spamless) {
+    // Set direction characters
     let up = "🡅", down = "🡇", left = "🡄", right = "🡆";
-    if(userIsMobile()){
-        up = "⬆️", down = "⬇️", left = "⬅️", right = "➡️";
-    }
-
-    if(spamless){
+    if (spamless) {
         up = "U", down = "D", left = "L", right = "R";
     }
 
-    let re = "";
-    for(let stratagem of completedStrategemsList){
-        let line = `${stratagem.name}: `;
+    let maxLength = 0;
+    let lines = [];
 
-        //Put arrows
-        for(let direction of stratagem.sequence){
-            switch(direction){
-                case "U":
-                    line += up; 
-                break;
-                case "D":
-                    line += down;
-                break;
-                case "L":
-                    line += left;
-                break;
-                case "R":
-                    line += right;
-                break;
+    // Find the maximum length
+    for (let sublist of completedStrategemsList) {
+        if (sublist.length > 0) { // Check if sublist is not empty
+            let firstStratagem = sublist[0]; // Access the first entry of the sublist
+            let line = `${firstStratagem.name}: `;
+
+            // Put arrows
+            for (let arrow of firstStratagem.sequence) {
+                switch (arrow) {
+                    case "Arrow_4_U.png":
+                        line += up;
+                        break;
+                    case "Arrow_1_D.png":
+                        line += down;
+                        break;
+                    case "Arrow_2_L.png":
+                        line += left;
+                        break;
+                    case "Arrow_3_R.png":
+                        line += right;
+                        break;
+                }
             }
+
+            
+
+            // Calculate padding length
+            let paddingLength = maxLength - line.length;
+            if (paddingLength > 0) {
+                line += "-".repeat(paddingLength);
+            }
+            if (line.length > maxLength) {
+                maxLength = line.length;
+            }
+
+            // Check if there's a second entry in the sublist
+            let secondEntry = "";
+            if (sublist.length > 1) {
+                secondEntry = ` ${sublist[1]}`;
+            }
+            // Concatenate the second entry to the line
+            line += secondEntry;
+
+            // Store line itself
+            lines.push(line);
+
+           
         }
-        line += html ? "<br>" : "\n";
-        re += line;
     }
 
+    let re = "";
+    for (let line of lines) {
+        re += line;
+        re += html ? "<br>" : "\n";
+    }
     return re;
 }
 
 function copyShare(spamless){
     // Gather text and write to clipboard
-    let output = `## My Stratagem Hero Online Score: ${completedStrategemsList.length}\n`
+    let output = `## My Stratagem Hero Online Score: ${keyPressScore}\n`
     output += stratagemListToString(false, spamless);
     output += "Do your part! Play Stratagem Hero Online: https://combustibletoast.github.io/"
     navigator.clipboard.writeText(output);
@@ -461,104 +490,4 @@ function showMobileButtons() {
     
     container.removeAttribute("hidden");
     container.style.visibility = "visible";
-}
-
-function configPopupInputListener(event) {
-    //this limits the input charater length to 1 char
-    event.target.value = event.data.toUpperCase();
-}
-function configPopupButtonListener(event) {
-    let actionTypes = ["game-config--save", "game-config--close", "game-config--open"];
-    let foundType = actionTypes.find(actionType => {
-        return event.target.closest(`[data-action-type="${actionType}"]`);
-    });
-    let foundButton = event.target.closest(`[data-action-type="${foundType}"]`);
-
-    if (foundButton) {
-        switch (foundButton.dataset.actionType) {
-            case "game-config--save":
-                //save controls
-                configSaveArrowKeys();
-                //NOTE: This is a intentional missing break as i want both the save and the popup close to happen due to there not being any more settings here
-            case "game-config--close":
-            case "game-config--open":
-                //close popup
-                toggleConfigPopup();
-                break;
-        }
-    }
-}
-
-function configSaveArrowKeys() {
-    CONFIG.arrowKeys = TEMPARROWKEYS;
-    localStorage.setItem("CONFIG.arrowKeys", JSON.stringify(CONFIG.arrowKeys));
-}
-
-function configPopupKeydownListener(event) {
-    let activeElement = document.activeElement;
-
-    if (activeElement.tagName == "INPUT") {
-        let excludedKeys = ["TAB", "ALT"];
-        if (!excludedKeys.find((keyCode) => event.code.toUpperCase().includes(keyCode))) {
-            TEMPARROWKEYS[activeElement.name] = event.code;
-        }
-    }
-}
-
-
-let configPopupEvents = [
-    ["input", configPopupInputListener],
-    ["keydown", configPopupKeydownListener]
-];
-function addConfigPopupListener() {
-    configPopupEvents.forEach((event)=>{
-        addEventListener(event[0], event[1]);
-    })
-}
-function removeConfigPopupListener() {
-    configPopupEvents.forEach((event)=>{
-        removeEventListener(event[0], event[1]);
-    })
-}
-
-function addMainGameListener() {
-    addEventListener("keydown", mainGameKeyDownListener);
-    addEventListener("click", configPopupButtonListener);
-}
-function removeMainGameListener() {
-    removeEventListener("keydown", mainGameKeyDownListener);
-}
-
-function toggleConfigPopup() {
-    let popupCurrentState = CONFIGPOPUP.classList.contains('active');
-
-    if (popupCurrentState == true) {
-        CONFIGPOPUP.classList.remove('active');
-        addMainGameListener();
-        removeConfigPopupListener();
-    } else {
-        CONFIGPOPUP.classList.add('active');
-        initaliseConfigPopupInputs();
-        removeMainGameListener();
-        addConfigPopupListener();
-        TEMPARROWKEYS = Object.assign({}, CONFIG.arrowKeys);
-    }
-}
-
-function getConfigPopupInputs() {
-    return CONFIGPOPUP.querySelectorAll('input[name][type=text]');
-}
-
-function initaliseConfigPopupInputs() {
-    let inputs = getConfigPopupInputs();
-
-    inputs.forEach((input)=>{
-        let inputKey = Object.keys(CONFIG.arrowKeys).find((key)=>{
-            return key.toLowerCase() == input.name.toLowerCase();
-        });
-        
-        if (inputKey) {
-            input.value = CONFIG.arrowKeys[inputKey].slice(-1).toUpperCase();
-        }
-    })
 }
